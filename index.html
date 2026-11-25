@@ -374,7 +374,163 @@
     $("adminBookings").innerHTML=(data||[]).map(a=>`<div class="card" style="margin:8px 0"><strong>${esc(a.nome_cliente)}</strong><p>${esc(a.data)} às ${esc(String(a.hora_inicio).slice(0,5))} · ${esc(a.servicos?.nome||"Serviço")} · ${brl(a.preco_servico)}</p><p>${esc(a.status)}</p><label>Status<select data-id="${a.id}" class="statusSelect"><option ${a.status==="pendente"?"selected":""}>pendente</option><option ${a.status==="confirmado"?"selected":""}>confirmado</option><option ${a.status==="concluido"?"selected":""}>concluido</option><option ${a.status==="cancelado"?"selected":""}>cancelado</option></select></label><button class="btn secondary saveStatus" data-id="${a.id}" style="margin-top:10px">Salvar status</button></div>`).join("")||"Nenhum agendamento encontrado.";
     document.querySelectorAll(".saveStatus").forEach(b=>b.addEventListener("click",async()=>{const id=b.dataset.id;const status=document.querySelector(`.statusSelect[data-id="${id}"]`).value;const {error}=await client.from("agendamentos").update({status}).eq("id",id);if(error)alert("Não foi possível atualizar o status.");else await loadAdmin()}));
   }
-  $("refreshBookings").addEventListener("click",loadAdmin);
+  
+// GERENCIAMENTO DE SERVICOS
+async function loadAdminServices() {
+  const area = $("adminServicesList");
+
+  area.innerHTML = `
+    <div class="card">
+      <h3>Cadastrar ou editar serviço</h3>
+      <form id="adminServiceForm">
+        <input type="hidden" id="serviceEditId">
+
+        <label>Nome do serviço</label>
+        <input id="serviceName" required placeholder="Ex.: Corte degradê">
+
+        <label>Descrição</label>
+        <input id="serviceDescription" placeholder="Descrição do serviço">
+
+        <label>Preço (R$)</label>
+        <input id="servicePrice" type="number" min="0" step="0.01" value="0">
+
+        <label>Duração em minutos</label>
+        <input id="serviceDuration" type="number" min="1" required value="30">
+
+        <label><input id="serviceConsult" type="checkbox"> Preço sob consulta</label>
+        <label><input id="serviceOnline" type="checkbox" checked> Permitir agendamento online</label>
+        <label><input id="serviceActive" type="checkbox" checked> Serviço ativo</label>
+
+        <button class="btn" type="submit">Salvar serviço</button>
+        <button class="btn secondary" type="button" id="cancelServiceEdit">Limpar formulário</button>
+      </form>
+      <p id="adminServiceMessage"></p>
+    </div>
+
+    <h3>Serviços cadastrados</h3>
+    <div id="adminServiceItems">Carregando...</div>
+  `;
+
+  const { data, error } = await client
+    .from("servicos")
+    .select("*")
+    .order("ordem", { ascending: true });
+
+  if (error) {
+    $("adminServiceItems").textContent = "Erro ao carregar serviços.";
+    return;
+  }
+
+  $("adminServiceItems").innerHTML = (data || []).map(s => `
+    <div class="card" style="margin:10px 0">
+      <strong>${esc(s.nome)}</strong>
+      <p>${esc(s.descricao || "")}</p>
+      <p>Preço: ${s.preco_sob_consulta ? "A consultar" : brl(s.preco)}</p>
+      <p>Duração: ${s.duracao_minutos} minutos</p>
+      <p>Status: ${s.ativo ? "Ativo" : "Inativo"}</p>
+      <p>Agendamento online: ${s.agendamento_online ? "Sim" : "Não"}</p>
+      <button class="btn editAdminService" data-id="${s.id}" type="button">Editar</button>
+      <button class="btn secondary toggleAdminService" data-id="${s.id}" data-active="${s.ativo}" type="button">
+        ${s.ativo ? "Desativar" : "Ativar"}
+      </button>
+    </div>
+  `).join("") || "Nenhum serviço cadastrado.";
+
+  $("adminServiceItems").querySelectorAll(".editAdminService").forEach(button => {
+    button.addEventListener("click", () => {
+      const s = data.find(item => item.id === button.dataset.id);
+      if (!s) return;
+
+      $("serviceEditId").value = s.id;
+      $("serviceName").value = s.nome || "";
+      $("serviceDescription").value = s.descricao || "";
+      $("servicePrice").value = s.preco ?? 0;
+      $("serviceDuration").value = s.duracao_minutos || 30;
+      $("serviceConsult").checked = !!s.preco_sob_consulta;
+      $("serviceOnline").checked = !!s.agendamento_online;
+      $("serviceActive").checked = !!s.ativo;
+
+      $("adminServiceForm").scrollIntoView({ behavior: "smooth" });
+    });
+  });
+
+  $("adminServiceItems").querySelectorAll(".toggleAdminService").forEach(button => {
+    button.addEventListener("click", async () => {
+      const novoStatus = button.dataset.active !== "true";
+
+      const { error } = await client
+        .from("servicos")
+        .update({ ativo: novoStatus })
+        .eq("id", button.dataset.id);
+
+      if (error) {
+        alert("Não foi possível alterar o serviço.");
+        return;
+      }
+
+      await loadAdminServices();
+      await loadServices();
+    });
+  });
+
+  $("adminServiceForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const id = $("serviceEditId").value;
+    const sobConsulta = $("serviceConsult").checked;
+
+    const servico = {
+      nome: $("serviceName").value.trim(),
+      descricao: $("serviceDescription").value.trim(),
+      preco: Number($("servicePrice").value || 0),
+      duracao_minutos: Number($("serviceDuration").value),
+      preco_sob_consulta: sobConsulta,
+      agendamento_online: $("serviceOnline").checked,
+      ativo: $("serviceActive").checked
+    };
+
+    if (!servico.nome || servico.duracao_minutos < 1) {
+      alert("Confira o nome e a duração do serviço.");
+      return;
+    }
+
+    const resultado = id
+      ? await client.from("servicos").update(servico).eq("id", id)
+      : await client.from("servicos").insert(servico);
+
+    if (resultado.error) {
+      alert("Erro ao salvar. Verifique as permissões e os dados.");
+      return;
+    }
+
+    $("adminServiceForm").reset();
+    $("serviceEditId").value = "";
+    $("servicePrice").value = 0;
+    $("serviceDuration").value = 30;
+    $("serviceOnline").checked = true;
+    $("serviceActive").checked = true;
+
+    $("adminServiceMessage").textContent = "Serviço salvo com sucesso.";
+
+    await loadAdminServices();
+    await loadServices();
+  });
+
+  $("cancelServiceEdit").addEventListener("click", () => {
+    $("adminServiceForm").reset();
+    $("serviceEditId").value = "";
+    $("servicePrice").value = 0;
+    $("serviceDuration").value = 30;
+    $("serviceOnline").checked = true;
+    $("serviceActive").checked = true;
+  });
+}
+
+// ABRIR A LISTA AO ENTRAR NA ABA SERVICOS
+document.querySelectorAll('.admin-tab[data-tab="services"]').forEach(button => {
+  button.addEventListener("click", loadAdminServices);
+});
+$("refreshBookings").addEventListener("click",loadAdmin);
   $("logout").addEventListener("click",async()=>{await client.auth.signOut();$("adminArea").classList.add("hidden")});
 
   // NAVEGACAO DO PAINEL ADMINISTRATIVO
