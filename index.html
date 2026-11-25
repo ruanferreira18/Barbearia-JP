@@ -526,9 +526,114 @@ async function loadAdminServices() {
   });
 }
 
+// GERENCIAMENTO DE HORARIOS DE FUNCIONAMENTO
+async function loadAdminHours() {
+  const area = $("adminHoursContent");
+  area.textContent = "Carregando horários...";
+
+  const { data, error } = await client
+    .from("horarios_funcionamento")
+    .select("*")
+    .order("dia_semana", { ascending: true });
+
+  if (error) {
+    area.textContent = "Erro ao carregar horários: " + error.message;
+    return;
+  }
+
+  const dias = [
+    "Domingo", "Segunda-feira", "Terça-feira",
+    "Quarta-feira", "Quinta-feira", "Sexta-feira",
+    "Sábado"
+  ];
+
+  area.innerHTML = (data || []).map(h => `
+    <div class="card" data-day="${h.dia_semana}">
+      <h3>${dias[Number(h.dia_semana)] || "Dia " + h.dia_semana}</h3>
+
+      <label>
+        <input class="hoursOpen" type="checkbox"
+          ${h.aberto ? "checked" : ""}>
+        Dia aberto
+      </label>
+
+      <label>Hora de abertura</label>
+      <input class="hoursStart" type="time"
+        value="${esc(h.hora_abertura || "")}">
+
+      <label>Hora de fechamento</label>
+      <input class="hoursEnd" type="time"
+        value="${esc(h.hora_fechamento || "")}">
+
+      <label>Início do intervalo</label>
+      <input class="hoursBreakStart" type="time"
+        value="${esc(h.inicio_intervalo || "")}">
+
+      <label>Fim do intervalo</label>
+      <input class="hoursBreakEnd" type="time"
+        value="${esc(h.fim_intervalo || "")}">
+
+      <button class="btn saveAdminHours" type="button">
+        Salvar ${dias[Number(h.dia_semana)] || "horário"}
+      </button>
+
+      <p class="hoursMessage"></p>
+    </div>
+  `).join("");
+
+  area.querySelectorAll(".saveAdminHours").forEach(button => {
+    button.addEventListener("click", async () => {
+      const card = button.closest("[data-day]");
+      const dia = Number(card.dataset.day);
+      const mensagem = card.querySelector(".hoursMessage");
+
+      const aberto = card.querySelector(".hoursOpen").checked;
+      const horaAbertura = card.querySelector(".hoursStart").value;
+      const horaFechamento = card.querySelector(".hoursEnd").value;
+      const inicioIntervalo = card.querySelector(".hoursBreakStart").value;
+      const fimIntervalo = card.querySelector(".hoursBreakEnd").value;
+
+      if (aberto && (!horaAbertura || !horaFechamento)) {
+        mensagem.textContent = "Informe abertura e fechamento.";
+        return;
+      }
+
+      if (!!inicioIntervalo !== !!fimIntervalo) {
+        mensagem.textContent = "Preencha os dois horários do intervalo.";
+        return;
+      }
+
+      button.disabled = true;
+      mensagem.textContent = "Salvando...";
+
+      const { error } = await client
+        .from("horarios_funcionamento")
+        .update({
+          aberto: aberto,
+          hora_abertura: horaAbertura || null,
+          hora_fechamento: horaFechamento || null,
+          inicio_intervalo: inicioIntervalo || null,
+          fim_intervalo: fimIntervalo || null
+        })
+        .eq("dia_semana", dia);
+
+      button.disabled = false;
+
+      if (error) {
+        mensagem.textContent = "Erro ao salvar: " + error.message;
+      } else {
+        mensagem.textContent = "Horário salvo com sucesso!";
+      }
+    });
+  });
+}
+
 // ABRIR A LISTA AO ENTRAR NA ABA SERVICOS
 document.querySelectorAll('.admin-tab[data-tab="services"]').forEach(button => {
   button.addEventListener("click", loadAdminServices);
+});// ABRIR HORARIOS AO ENTRAR NA ABA
+document.querySelectorAll('.admin-tab[data-tab="hours"]').forEach(button => {
+  button.addEventListener("click", loadAdminHours);
 });
 $("refreshBookings").addEventListener("click",loadAdmin);
   $("logout").addEventListener("click",async()=>{await client.auth.signOut();$("adminArea").classList.add("hidden")});
