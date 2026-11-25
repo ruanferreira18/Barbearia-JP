@@ -178,8 +178,8 @@
 <script>
   // CONFIGURE ESTES DOIS VALORES com os dados públicos do seu projeto Supabase.
   // Nunca coloque aqui a chave Secret/service_role.
-  const SUPABASE_URL = "COLE_AQUI_A_PROJECT_URL";
-  const SUPABASE_ANON_KEY = "COLE_AQUI_A_CHAVE_PUBLISHABLE";
+  const SUPABASE_URL =  "https://ieobzebgmjgiuinbkltc.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_P_SKCF6wSlZU3b2Hs6eLkw_BuNz1QJi";
   const ready = SUPABASE_URL.startsWith("https://") && !SUPABASE_ANON_KEY.includes("COLE_AQUI");
   const client = ready ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   const $ = id => document.getElementById(id);
