@@ -4,50 +4,133 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111111">
-  <title>Barbearia JP | Agendamento</title>
-  <meta name="description" content="Agende seu horário na Barbearia JP.">
+  <title>Barbearia JP | Seu estilo, seu horário</title>
+  <meta name="description" content="Conheça a Barbearia JP e agende seu horário online.">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root{--bg:#101010;--panel:#191919;--gold:#c9a45c;--text:#f6f2ea;--muted:#aaa39a;--line:#34302a}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
-    a{color:inherit}.wrap{width:min(1100px,92%);margin:auto}.top{padding:22px 0;border-bottom:1px solid var(--line)}
-    .brand{font-size:1.35rem;font-weight:800;letter-spacing:.12em}.brand span{color:var(--gold)}
-    .hero{padding:76px 0 60px;background:radial-gradient(ellipse at 80% 20%,#40331e 0,transparent 42%)}
-    .eyebrow{color:var(--gold);letter-spacing:.18em;text-transform:uppercase;font-size:.78rem;font-weight:700}
-    h1{font-size:clamp(2.5rem,8vw,5rem);line-height:1.02;max-width:760px;margin:14px 0}
-    h2{font-size:clamp(1.6rem,4vw,2.3rem);margin:0 0 18px}
-    p{color:var(--muted)}.hero p{max-width:560px;font-size:1.1rem}
-    .btn{display:inline-block;border:0;border-radius:9px;background:var(--gold);color:#17130d;padding:13px 19px;font-weight:800;text-decoration:none;cursor:pointer}
-    .btn.secondary{background:transparent;border:1px solid var(--gold);color:var(--gold)}
-    section{padding:48px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
-    .service{display:flex;flex-direction:column;min-height:145px}.service strong{font-size:1.08rem}.price{color:var(--gold);font-size:1.3rem;font-weight:800;margin-top:auto;padding-top:12px}
-    form{display:grid;gap:14px}.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-    label{display:grid;gap:6px;color:#e6dfd3;font-weight:600}input,select{width:100%;background:#101010;color:var(--text);border:1px solid #4a443a;border-radius:8px;padding:12px;font:inherit}
+    :root{--bg:#0c0c0d;--panel:#171719;--panel2:#202023;--gold:#d7ad68;--text:#f7f3ed;--muted:#aaa5a0;--line:#343236}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;scroll-padding-top:24px}
+    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    a{color:inherit;text-decoration:none}
+    img{display:block;max-width:100%}
+    .wrap{width:min(1160px,92%);margin:auto}
+    .top{position:relative;z-index:2;border-bottom:1px solid var(--line);background:#0c0c0deF}
+    .nav{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .brand{font-size:1.05rem;font-weight:900;letter-spacing:.18em}
+    .brand span{color:var(--gold)}
+    .navlinks{display:flex;align-items:center;gap:26px;color:#d4d0ca;font-size:.92rem}
+    .navlinks a:hover{color:var(--gold)}
+    .navcta,.btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--gold);border-radius:5px;background:var(--gold);color:#17130d;padding:13px 20px;font-weight:850;letter-spacing:.02em;cursor:pointer;transition:.2s}
+    .navcta:hover,.btn:hover{transform:translateY(-2px);filter:brightness(1.08)}
+    .btn.secondary{background:transparent;color:var(--gold)}
+    .hero{min-height:590px;display:flex;align-items:center;position:relative;overflow:hidden;background:linear-gradient(90deg,rgba(8,8,9,.98) 0%,rgba(8,8,9,.86) 48%,rgba(8,8,9,.38) 100%),url("05-barbearia-atendimento-1.jpg") center 38%/cover no-repeat}
+    .hero:after{content:"";position:absolute;inset:auto 0 0;height:130px;background:linear-gradient(transparent,var(--bg))}
+    .hero-content{position:relative;z-index:1;padding:90px 0 120px;max-width:720px}
+    .eyebrow{color:var(--gold);letter-spacing:.22em;text-transform:uppercase;font-size:.74rem;font-weight:850}
+    h1{font-size:clamp(3rem,8vw,6.2rem);line-height:.98;letter-spacing:-.055em;margin:18px 0 22px}
+    h1 span{color:var(--gold)}
+    .hero p{max-width:540px;color:#d0cbc4;font-size:1.12rem;margin:0 0 30px}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px}
+    .hero-note{margin-top:24px;color:#aaa5a0;font-size:.85rem;letter-spacing:.04em}
+    section{padding:82px 0}
+    .section-head{max-width:650px;margin-bottom:30px}
+    h2{font-size:clamp(2rem,5vw,3.1rem);line-height:1.08;letter-spacing:-.035em;margin:10px 0 14px}
+    .section-head p,.muted{color:var(--muted)}
+    .intro-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:42px;align-items:center}
+    .intro-photo{height:420px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+    .intro-photo img{width:100%;height:100%;object-fit:cover}
+    .feature-list{display:grid;gap:16px;margin-top:26px}
+    .feature{display:flex;gap:14px;align-items:flex-start}
+    .feature-mark{width:34px;height:34px;flex:none;border:1px solid #80663f;color:var(--gold);display:grid;place-items:center;border-radius:50%;font-weight:900}
+    .feature strong{display:block;margin-bottom:2px}
+    .feature p{margin:0;color:var(--muted);font-size:.94rem}
+    .services{background:#121214;border-top:1px solid #242326;border-bottom:1px solid #242326}
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:22px}
+    .service{display:flex;flex-direction:column;min-height:174px}
+    .service strong{font-size:1.08rem}
+    .service p{color:var(--muted);font-size:.92rem;margin:8px 0}
+    .price{color:var(--gold);font-size:1.35rem;font-weight:900;margin-top:auto;padding-top:12px}
+    .notice{padding:14px 16px;border:1px solid var(--line);border-radius:6px;color:var(--muted);font-size:.92rem;margin-top:18px}
+    .gallery-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .gallery-item{position:relative;overflow:hidden;border-radius:7px;background:var(--panel);border:1px solid var(--line);aspect-ratio:4/5}
+    .gallery-item img{width:100%;height:100%;object-fit:cover;transition:transform .45s}
+    .gallery-item:hover img{transform:scale(1.045)}
+    .gallery-item figcaption{position:absolute;inset:auto 0 0;padding:35px 14px 13px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:.9rem;font-weight:750}
+    .booking{background:linear-gradient(135deg,#171513,#101012 65%)}
+    .booking-layout{display:grid;grid-template-columns:.8fr 1.2fr;gap:34px;align-items:start}
+    .booking-copy p{color:var(--muted)}
+    .booking-copy .bigline{font-size:1.12rem;color:#e6dfd5}
+    form{display:grid;gap:14px}
+    .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    label{display:grid;gap:6px;color:#e6dfd3;font-weight:650;font-size:.92rem}
+    input,select{width:100%;background:#101012;color:var(--text);border:1px solid #514b43;border-radius:5px;padding:13px;font:inherit;min-height:48px}
     input:focus,select:focus{outline:2px solid var(--gold);border-color:var(--gold)}
-    .notice{padding:12px 14px;border:1px solid var(--line);border-radius:9px;color:var(--muted);font-size:.92rem}
-    .status{padding:12px;border-radius:8px;display:none}.status.show{display:block}.status.error{background:#431f1f;color:#ffd8d8}.status.ok{background:#183b28;color:#d5ffe2}
-    footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-size:.9rem}
-    .admin{margin-top:22px}.hidden{display:none!important}
-    @media(max-width:600px){.hero{padding:52px 0 40px}section{padding:36px 0}}
+    input[type=checkbox]{width:auto;min-height:0;accent-color:var(--gold)}
+    .checklabel{display:flex;grid-template-columns:auto 1fr;align-items:flex-start;font-weight:400;color:var(--muted)}
+    .status{padding:12px;border-radius:6px;display:none}.status.show{display:block}.status.error{background:#431f1f;color:#ffd8d8}.status.ok{background:#183b28;color:#d5ffe2}
+    .hours-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .hours-grid .card{padding:18px}
+    .hours-grid strong{color:var(--gold)}
+    .admin{padding-top:28px}
+    .admin summary{cursor:pointer;font-weight:800;color:var(--gold)}
+    .hidden{display:none!important}
+    footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:.9rem}
+    .footerrow{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    @media(max-width:800px){.navlinks{gap:14px}.navlinks a:not(.navcta){display:none}.hero{min-height:560px;background-position:58% center}.intro-grid,.booking-layout{grid-template-columns:1fr}.intro-photo{height:340px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hours-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:520px){section{padding:60px 0}.hero-content{padding:76px 0 112px}.hero p{font-size:1rem}.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.gallery-item{aspect-ratio:3/4}.formgrid{grid-template-columns:1fr}.card{padding:18px}.grid{gap:10px}.service{min-height:160px}.nav{min-height:66px}}
   </style>
 </head>
 <body>
-<header class="top"><div class="wrap"><div class="brand">BARBEARIA <span>JP</span></div></div></header>
+<header class="top"><div class="wrap nav">
+  <a class="brand" href="#">BARBEARIA <span>JP</span></a>
+  <nav class="navlinks"><a href="#sobre">A barbearia</a><a href="#servicos">Serviços</a><a href="#galeria">Galeria</a><a class="navcta" href="#agendar">Agendar agora</a></nav>
+</div></header>
 <main>
-  <div class="hero"><div class="wrap">
-    <div class="eyebrow">Barbearia JP</div>
-    <h1>Seu estilo.<br><span style="color:var(--gold)">Seu horário.</span></h1>
-    <p>Atendimento com hora marcada. Escolha o serviço, confira os horários disponíveis e faça seu agendamento online.</p>
-    <a class="btn" href="#agendar">Agendar agora</a>
-  </div></div>
-  <section><div class="wrap">
-    <div class="eyebrow">Nossos serviços</div><h2>Escolha seu estilo</h2>
+  <section class="hero">
+    <div class="wrap hero-content">
+      <div class="eyebrow">Barbearia JP · Atendimento com hora marcada</div>
+      <h1>Seu estilo.<br><span>Sua identidade.</span></h1>
+      <p>Cuidado nos detalhes, atenção em cada corte e o horário organizado para você. Escolha seu serviço e reserve seu próximo atendimento.</p>
+      <div class="hero-actions"><a class="btn" href="#agendar">Agendar agora</a><a class="btn secondary" href="#galeria">Ver trabalhos</a></div>
+      <div class="hero-note">CORTE • BARBA • ESTILO</div>
+    </div>
+  </section>
+
+  <section id="sobre"><div class="wrap intro-grid">
+    <div>
+      <div class="eyebrow">Mais que um corte</div><h2>Seu visual merece atenção.</h2>
+      <p class="muted">Na Barbearia JP, cada atendimento é uma oportunidade de cuidar do visual com dedicação e atenção aos detalhes. Confira alguns trabalhos e agende seu horário com praticidade.</p>
+      <div class="feature-list">
+        <div class="feature"><div class="feature-mark">01</div><div><strong>Atendimento com hora marcada</strong><p>Consulte os horários disponíveis antes de reservar.</p></div></div>
+        <div class="feature"><div class="feature-mark">02</div><div><strong>Serviços para seu estilo</strong><p>Opções de corte, barba e acabamento.</p></div></div>
+        <div class="feature"><div class="feature-mark">03</div><div><strong>Agendamento online</strong><p>Faça sua solicitação diretamente pelo site.</p></div></div>
+      </div>
+    </div>
+    <div class="intro-photo"><img src="06-barbearia-atendimento-2.jpg" alt="Atendimento na Barbearia JP" loading="lazy"></div>
+  </div></section>
+
+  <section class="services" id="servicos"><div class="wrap">
+    <div class="section-head"><div class="eyebrow">Serviços</div><h2>Escolha seu estilo.</h2><p>Confira os serviços disponíveis na Barbearia JP.</p></div>
     <div id="services" class="grid"><div class="card">Carregando serviços...</div></div>
     <p class="notice">Sobrancelhas e serviços com preço sob consulta devem ser combinados diretamente com a barbearia.</p>
   </div></section>
-  <section id="agendar"><div class="wrap">
-    <div class="eyebrow">Agendamento online</div><h2>Reserve seu horário</h2>
+
+  <section id="galeria"><div class="wrap">
+    <div class="section-head"><div class="eyebrow">Galeria</div><h2>Trabalhos e detalhes.</h2><p>Um pouco do cuidado e dos resultados feitos na Barbearia JP.</p></div>
+    <div class="gallery-grid">
+      <figure class="gallery-item"><img src="01-corte-freestyle.jpg" alt="Corte freestyle" loading="lazy"><figcaption>Corte freestyle</figcaption></figure>
+      <figure class="gallery-item"><img src="02-corte-social-degrade.jpg" alt="Corte social degradê" loading="lazy"><figcaption>Social degradê</figcaption></figure>
+      <figure class="gallery-item"><img src="03-galeria-detalhes.jpg" alt="Detalhes do trabalho" loading="lazy"><figcaption>Detalhes</figcaption></figure>
+      <figure class="gallery-item"><img src="04-corte-degrade.jpg" alt="Corte degradê" loading="lazy"><figcaption>Corte degradê</figcaption></figure>
+      <figure class="gallery-item"><img src="05-barbearia-atendimento-1.jpg" alt="Ambiente e atendimento" loading="lazy"><figcaption>Atendimento</figcaption></figure>
+      <figure class="gallery-item"><img src="07-corte-social-repost.jpg" alt="Corte social" loading="lazy"><figcaption>Corte social</figcaption></figure>
+    </div>
+  </div></section>
+
+  <section class="booking" id="agendar"><div class="wrap booking-layout">
+    <div class="booking-copy"><div class="eyebrow">Agendamento online</div><h2>Seu próximo horário começa aqui.</h2><p class="bigline">Escolha o serviço, selecione uma data e confira os horários disponíveis.</p><p>Após enviar a solicitação, aguarde a confirmação da barbearia.</p></div>
     <div class="card">
       <form id="bookingForm">
         <div class="formgrid">
@@ -55,26 +138,28 @@
           <label>WhatsApp<input id="phone" autocomplete="tel" inputmode="tel" required placeholder="(00) 00000-0000"></label>
           <label>Serviço<select id="service" required><option value="">Selecione um serviço</option></select></label>
           <label>Data<input id="date" type="date" required></label>
-          <label>Horário disponível<select id="slot" required disabled><option value="">Escolha serviço e data</option></select></label>
+          <label style="grid-column:1/-1">Horário disponível<select id="slot" required disabled><option value="">Escolha serviço e data</option></select></label>
         </div>
-        <label style="display:flex;grid-template-columns:auto 1fr;align-items:start;font-weight:400"><input id="optin" type="checkbox" style="width:auto;margin-top:5px"> Aceito receber confirmação e lembrete deste agendamento pelo WhatsApp.</label>
+        <label class="checklabel"><input id="optin" type="checkbox"> Aceito receber confirmação e lembrete deste agendamento pelo WhatsApp.</label>
         <button class="btn" id="submit" type="submit">Confirmar agendamento</button>
         <div id="message" class="status" role="status"></div>
       </form>
     </div>
   </div></section>
+
   <section><div class="wrap">
-    <div class="eyebrow">Atendimento</div><h2>Horários da barbearia</h2>
-    <div class="grid">
-      <div class="card"><strong>Terça-feira</strong><p>09:00–11:30 e 13:00–18:30</p></div>
-      <div class="card"><strong>Quarta e quinta</strong><p>09:00–11:30 e 13:00–21:00</p></div>
-      <div class="card"><strong>Sexta-feira</strong><p>09:00–12:00 e 13:00–21:00</p></div>
-      <div class="card"><strong>Sábado</strong><p>09:00–12:00 e 13:00–18:00</p></div>
+    <div class="section-head"><div class="eyebrow">Funcionamento</div><h2>Organize sua visita.</h2><p>Confira os horários regulares de atendimento.</p></div>
+    <div class="hours-grid">
+      <div class="card"><strong>Terça-feira</strong><p>09:00–11:30<br>13:00–18:30</p></div>
+      <div class="card"><strong>Quarta e quinta</strong><p>09:00–11:30<br>13:00–21:00</p></div>
+      <div class="card"><strong>Sexta-feira</strong><p>09:00–12:00<br>13:00–21:00</p></div>
+      <div class="card"><strong>Sábado</strong><p>09:00–12:00<br>13:00–18:00</p></div>
     </div>
-    <p>Fechado às segundas e domingos. Horários especiais podem alterar a agenda.</p>
+    <p class="muted">Fechado às segundas e domingos. Horários especiais podem alterar a agenda.</p>
   </div></section>
+
   <section class="admin"><div class="wrap">
-    <details class="card"><summary style="cursor:pointer;font-weight:700;color:var(--gold)">Acesso do administrador</summary>
+    <details class="card"><summary>Acesso do administrador</summary>
       <form id="loginForm" style="margin-top:16px">
         <label>E-mail do administrador<input id="adminEmail" type="email" autocomplete="username" required></label>
         <label>Senha<input id="adminPassword" type="password" autocomplete="current-password" required></label>
@@ -88,7 +173,8 @@
     </details>
   </div></section>
 </main>
-<footer><div class="wrap">© <span id="year"></span> Barbearia JP. Todos os direitos reservados.</div></footer>
+<footer><div class="wrap footerrow"><span>© <span id="year"></span> Barbearia JP. Todos os direitos reservados.</span><span>Seu estilo. Sua identidade.</span></div></footer>
+
 <script>
   // CONFIGURE ESTES DOIS VALORES com os dados públicos do seu projeto Supabase.
   // Nunca coloque aqui a chave Secret/service_role.
@@ -149,4 +235,5 @@
   $("logout").addEventListener("click",async()=>{await client.auth.signOut();$("adminArea").classList.add("hidden")});
   if(ready)loadServices();
 </script>
-</body></html>
+</body>
+</html>
