@@ -1,0 +1,12 @@
+BARBEARIA JP — PRIMEIRA VERSÃO
+
+Arquivo principal: index.html
+
+Antes de publicar:
+1. No bloco CONFIGURE ESTES DOIS VALORES, preencha SUPABASE_URL com a Project URL.
+2. Preencha SUPABASE_ANON_KEY com a chave Publishable/anon.
+3. Nunca use a chave Secret/service_role no navegador.
+4. A interface usa as RPCs já preparadas: consultar_horarios_disponiveis e criar_agendamento.
+5. O painel administrativo usa Supabase Auth e as políticas RLS existentes.
+6. WhatsApp automático ainda não está integrado. O consentimento é registrado na reserva.
+7. Faça testes completos antes de divulgar o site.

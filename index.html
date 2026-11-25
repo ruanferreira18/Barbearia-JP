@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111111">
+  <title>Barbearia JP | Agendamento</title>
+  <meta name="description" content="Agende seu horário na Barbearia JP.">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{--bg:#101010;--panel:#191919;--gold:#c9a45c;--text:#f6f2ea;--muted:#aaa39a;--line:#34302a}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+    a{color:inherit}.wrap{width:min(1100px,92%);margin:auto}.top{padding:22px 0;border-bottom:1px solid var(--line)}
+    .brand{font-size:1.35rem;font-weight:800;letter-spacing:.12em}.brand span{color:var(--gold)}
+    .hero{padding:76px 0 60px;background:radial-gradient(ellipse at 80% 20%,#40331e 0,transparent 42%)}
+    .eyebrow{color:var(--gold);letter-spacing:.18em;text-transform:uppercase;font-size:.78rem;font-weight:700}
+    h1{font-size:clamp(2.5rem,8vw,5rem);line-height:1.02;max-width:760px;margin:14px 0}
+    h2{font-size:clamp(1.6rem,4vw,2.3rem);margin:0 0 18px}
+    p{color:var(--muted)}.hero p{max-width:560px;font-size:1.1rem}
+    .btn{display:inline-block;border:0;border-radius:9px;background:var(--gold);color:#17130d;padding:13px 19px;font-weight:800;text-decoration:none;cursor:pointer}
+    .btn.secondary{background:transparent;border:1px solid var(--gold);color:var(--gold)}
+    section{padding:48px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+    .service{display:flex;flex-direction:column;min-height:145px}.service strong{font-size:1.08rem}.price{color:var(--gold);font-size:1.3rem;font-weight:800;margin-top:auto;padding-top:12px}
+    form{display:grid;gap:14px}.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+    label{display:grid;gap:6px;color:#e6dfd3;font-weight:600}input,select{width:100%;background:#101010;color:var(--text);border:1px solid #4a443a;border-radius:8px;padding:12px;font:inherit}
+    input:focus,select:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+    .notice{padding:12px 14px;border:1px solid var(--line);border-radius:9px;color:var(--muted);font-size:.92rem}
+    .status{padding:12px;border-radius:8px;display:none}.status.show{display:block}.status.error{background:#431f1f;color:#ffd8d8}.status.ok{background:#183b28;color:#d5ffe2}
+    footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-size:.9rem}
+    .admin{margin-top:22px}.hidden{display:none!important}
+    @media(max-width:600px){.hero{padding:52px 0 40px}section{padding:36px 0}}
+  </style>
+</head>
+<body>
+<header class="top"><div class="wrap"><div class="brand">BARBEARIA <span>JP</span></div></div></header>
+<main>
+  <div class="hero"><div class="wrap">
+    <div class="eyebrow">Barbearia JP</div>
+    <h1>Seu estilo.<br><span style="color:var(--gold)">Seu horário.</span></h1>
+    <p>Atendimento com hora marcada. Escolha o serviço, confira os horários disponíveis e faça seu agendamento online.</p>
+    <a class="btn" href="#agendar">Agendar agora</a>
+  </div></div>
+  <section><div class="wrap">
+    <div class="eyebrow">Nossos serviços</div><h2>Escolha seu estilo</h2>
+    <div id="services" class="grid"><div class="card">Carregando serviços...</div></div>
+    <p class="notice">Sobrancelhas e serviços com preço sob consulta devem ser combinados diretamente com a barbearia.</p>
+  </div></section>
+  <section id="agendar"><div class="wrap">
+    <div class="eyebrow">Agendamento online</div><h2>Reserve seu horário</h2>
+    <div class="card">
+      <form id="bookingForm">
+        <div class="formgrid">
+          <label>Nome completo<input id="name" autocomplete="name" required minlength="3" placeholder="Seu nome e sobrenome"></label>
+          <label>WhatsApp<input id="phone" autocomplete="tel" inputmode="tel" required placeholder="(00) 00000-0000"></label>
+          <label>Serviço<select id="service" required><option value="">Selecione um serviço</option></select></label>
+          <label>Data<input id="date" type="date" required></label>
+          <label>Horário disponível<select id="slot" required disabled><option value="">Escolha serviço e data</option></select></label>
+        </div>
+        <label style="display:flex;grid-template-columns:auto 1fr;align-items:start;font-weight:400"><input id="optin" type="checkbox" style="width:auto;margin-top:5px"> Aceito receber confirmação e lembrete deste agendamento pelo WhatsApp.</label>
+        <button class="btn" id="submit" type="submit">Confirmar agendamento</button>
+        <div id="message" class="status" role="status"></div>
+      </form>
+    </div>
+  </div></section>
+  <section><div class="wrap">
+    <div class="eyebrow">Atendimento</div><h2>Horários da barbearia</h2>
+    <div class="grid">
+      <div class="card"><strong>Terça-feira</strong><p>09:00–11:30 e 13:00–18:30</p></div>
+      <div class="card"><strong>Quarta e quinta</strong><p>09:00–11:30 e 13:00–21:00</p></div>
+      <div class="card"><strong>Sexta-feira</strong><p>09:00–12:00 e 13:00–21:00</p></div>
+      <div class="card"><strong>Sábado</strong><p>09:00–12:00 e 13:00–18:00</p></div>
+    </div>
+    <p>Fechado às segundas e domingos. Horários especiais podem alterar a agenda.</p>
+  </div></section>
+  <section class="admin"><div class="wrap">
+    <details class="card"><summary style="cursor:pointer;font-weight:700;color:var(--gold)">Acesso do administrador</summary>
+      <form id="loginForm" style="margin-top:16px">
+        <label>E-mail do administrador<input id="adminEmail" type="email" autocomplete="username" required></label>
+        <label>Senha<input id="adminPassword" type="password" autocomplete="current-password" required></label>
+        <button class="btn secondary" type="submit">Entrar</button><div id="loginMessage" class="status"></div>
+      </form>
+      <div id="adminArea" class="hidden">
+        <p id="adminIdentity"></p><button id="logout" class="btn secondary" type="button">Sair</button>
+        <h3>Agendamentos</h3><button id="refreshBookings" class="btn" type="button">Atualizar agenda</button>
+        <div id="adminBookings" style="margin-top:14px"></div>
+      </div>
+    </details>
+  </div></section>
+</main>
+<footer><div class="wrap">© <span id="year"></span> Barbearia JP. Todos os direitos reservados.</div></footer>
+<script>
+  // CONFIGURE ESTES DOIS VALORES com os dados públicos do seu projeto Supabase.
+  // Nunca coloque aqui a chave Secret/service_role.
+  const SUPABASE_URL = "COLE_AQUI_A_PROJECT_URL";
+  const SUPABASE_ANON_KEY = "COLE_AQUI_A_CHAVE_PUBLISHABLE";
+  const ready = SUPABASE_URL.startsWith("https://") && !SUPABASE_ANON_KEY.includes("COLE_AQUI");
+  const client = ready ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+  const $ = id => document.getElementById(id);
+  const brl = n => Number(n).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  const today = new Date(); const localDate = new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  $("date").min = localDate; $("year").textContent = new Date().getFullYear();
+  function show(id,text,type="error"){const el=$(id);el.textContent=text;el.className="status show "+type}
+  function hide(id){$(id).className="status"}
+  let services=[];
+  async function loadServices(){
+    if(!ready){$("services").innerHTML='<div class="card">Conexão ainda não configurada. O site será conectado ao Supabase na próxima etapa.</div>';return}
+    const {data,error}=await client.from("servicos").select("id,nome,descricao,preco,duracao_minutos,ativo,agendamento_online,preco_sob_consulta").eq("ativo",true).order("ordem");
+    if(error){$("services").textContent="Não foi possível carregar os serviços.";return}
+    services=data||[];
+    $("services").innerHTML=services.map(s=>`<article class="card service"><strong>${esc(s.nome)}</strong><p>${esc(s.descricao||`${s.duracao_minutos} minutos`)}</p><div class="price">${s.preco_sob_consulta?"A consultar":brl(s.preco)}</div></article>`).join("");
+    $("service").innerHTML='<option value="">Selecione um serviço</option>'+services.filter(s=>s.agendamento_online&&!s.preco_sob_consulta).map(s=>`<option value="${s.id}">${esc(s.nome)} — ${brl(s.preco)}</option>`).join("");
+  }
+  function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+  async function loadSlots(){
+    $("slot").disabled=true;$("slot").innerHTML='<option value="">Carregando...</option>';
+    if(!ready||!$("service").value||!$("date").value){$("slot").innerHTML='<option value="">Escolha serviço e data</option>';return}
+    const {data,error}=await client.rpc("consultar_horarios_disponiveis",{p_data:$("date").value,p_servico_id:$("service").value});
+    if(error){$("slot").innerHTML='<option value="">Erro ao consultar horários</option>';return}
+    $("slot").innerHTML='<option value="">Selecione um horário</option>'+(data||[]).map(x=>`<option value="${x.hora_inicio}">${String(x.hora_inicio).slice(0,5)}</option>`).join("");
+    $("slot").disabled=!(data||[]).length;
+    if(!(data||[]).length)$("slot").innerHTML='<option value="">Nenhum horário disponível</option>';
+  }
+  $("service").addEventListener("change",loadSlots);$("date").addEventListener("change",loadSlots);
+  $("bookingForm").addEventListener("submit",async e=>{
+    e.preventDefault();hide("message");
+    if(!ready){show("message","A conexão com o Supabase ainda será configurada. Nenhum agendamento foi enviado.");return}
+    $("submit").disabled=true;$("submit").textContent="Enviando...";
+    const {data,error}=await client.rpc("criar_agendamento",{p_nome_cliente:$("name").value.trim(),p_telefone_cliente:$("phone").value,p_servico_id:$("service").value,p_data:$("date").value,p_hora_inicio:$("slot").value,p_whatsapp_opt_in:$("optin").checked});
+    $("submit").disabled=false;$("submit").textContent="Confirmar agendamento";
+    if(error){show("message","Não foi possível concluir. Tente novamente ou entre em contato com a barbearia.");return}
+    const result=Array.isArray(data)?data[0]:data;
+    if(result && (result.sucesso===false || result.success===false)){show("message",result.mensagem||result.message||"Esse horário não está mais disponível.");return}
+    show("message","Solicitação recebida! Aguarde a confirmação da barbearia.", "ok");$("bookingForm").reset();$("date").min=localDate;$("slot").innerHTML='<option value="">Escolha serviço e data</option>';
+  });
+  $("loginForm").addEventListener("submit",async e=>{
+    e.preventDefault();if(!ready){show("loginMessage","Configure a conexão primeiro.");return}
+    const {data,error}=await client.auth.signInWithPassword({email:$("adminEmail").value,password:$("adminPassword").value});
+    if(error){show("loginMessage","Não foi possível entrar. Confira o e-mail e a senha.");return}
+    hide("loginMessage");$("adminArea").classList.remove("hidden");$("adminIdentity").textContent="Acesso administrativo conectado.";await loadAdmin();
+  });
+  async function loadAdmin(){
+    const {data,error}=await client.from("agendamentos").select("id,nome_cliente,telefone_cliente,data,hora_inicio,hora_fim,status,preco_servico,servicos(nome)").order("data",{ascending:true}).order("hora_inicio",{ascending:true}).limit(100);
+    if(error){$("adminBookings").textContent="Não foi possível carregar a agenda. Verifique as permissões de administrador.";return}
+    $("adminBookings").innerHTML=(data||[]).map(a=>`<div class="card" style="margin:8px 0"><strong>${esc(a.nome_cliente)}</strong><p>${esc(a.data)} às ${esc(String(a.hora_inicio).slice(0,5))} · ${esc(a.servicos?.nome||"Serviço")} · ${brl(a.preco_servico)}</p><p>${esc(a.status)}</p><label>Status<select data-id="${a.id}" class="statusSelect"><option ${a.status==="pendente"?"selected":""}>pendente</option><option ${a.status==="confirmado"?"selected":""}>confirmado</option><option ${a.status==="concluido"?"selected":""}>concluido</option><option ${a.status==="cancelado"?"selected":""}>cancelado</option></select></label><button class="btn secondary saveStatus" data-id="${a.id}" style="margin-top:10px">Salvar status</button></div>`).join("")||"Nenhum agendamento encontrado.";
+    document.querySelectorAll(".saveStatus").forEach(b=>b.addEventListener("click",async()=>{const id=b.dataset.id;const status=document.querySelector(`.statusSelect[data-id="${id}"]`).value;const {error}=await client.from("agendamentos").update({status}).eq("id",id);if(error)alert("Não foi possível atualizar o status.");else await loadAdmin()}));
+  }
+  $("refreshBookings").addEventListener("click",loadAdmin);
+  $("logout").addEventListener("click",async()=>{await client.auth.signOut();$("adminArea").classList.add("hidden")});
+  if(ready)loadServices();
+</script>
+</body></html>
