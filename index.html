@@ -79,7 +79,101 @@
     footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:.9rem}
     .footerrow{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
     @media(max-width:800px){.navlinks{gap:14px}.navlinks a:not(.navcta){display:none}.hero{min-height:560px;background-position:58% center}.intro-grid,.booking-layout{grid-template-columns:1fr}.intro-photo{height:340px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hours-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:520px){section{padding:60px 0}.hero-content{padding:76px 0 112px}.hero p{font-size:1rem}.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.gallery-item{aspect-ratio:3/4}.formgrid{grid-template-columns:1fr}.card{padding:18px}.grid{gap:10px}.service{min-height:160px}.nav{min-height:66px}}
+    @media(max-width:520px){section{padding:60px 0}.hero-content{padding:76px 0 112px}.hero p{font-size:1rem}.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.gallery-item{aspect-ratio:3/4}.formgrid{grid-template-columns:1fr}.card{padding:18px}.grid{gap:10px}.service{min-height:160px}.nav{min-height:66px}} 
+
+/* PAINEL ADMINISTRATIVO BARBEARIA JP */
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 18px;
+  margin: 18px 0;
+  background: #171717;
+  border: 1px solid #333;
+  border-radius: 16px;
+}
+
+.admin-header h2 {
+  margin: 8px 0;
+  color: #d6ad62;
+}
+
+.admin-header p {
+  margin: 4px 0;
+  color: #aaa;
+}
+
+.admin-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.admin-tab {
+  min-height: 76px;
+  padding: 14px 10px;
+  border: 1px solid #333;
+  border-radius: 13px;
+  background: #242424;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-tab.active {
+  background: #b9914c;
+  border-color: #d6ad62;
+  color: #111;
+}
+
+.admin-panel {
+  padding: 18px;
+  margin: 14px 0;
+  background: #171717;
+  border: 1px solid #333;
+  border-radius: 16px;
+}
+
+.admin-panel h3 {
+  margin-top: 0;
+  color: #d6ad62;
+}
+
+.admin-panel button {
+  cursor: pointer;
+}
+
+.admin-panel input,
+.admin-panel select,
+.admin-panel textarea {
+  width: 100%;
+  padding: 12px;
+  margin: 6px 0;
+  border: 1px solid #444;
+  border-radius: 9px;
+  background: #101010;
+  color: #fff;
+}
+
+.admin-panel .card {
+  margin: 10px 0;
+}
+
+@media (max-width: 420px) {
+  .admin-header {
+    align-items: flex-start;
+  }
+
+  .admin-tab {
+    min-height: 70px;
+    font-size: 14px;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -165,11 +259,60 @@
         <label>Senha<input id="adminPassword" type="password" autocomplete="current-password" required></label>
         <button class="btn secondary" type="submit">Entrar</button><div id="loginMessage" class="status"></div>
       </form>
-      <div id="adminArea" class="hidden">
-        <p id="adminIdentity"></p><button id="logout" class="btn secondary" type="button">Sair</button>
-        <h3>Agendamentos</h3><button id="refreshBookings" class="btn" type="button">Atualizar agenda</button>
-        <div id="adminBookings" style="margin-top:14px"></div>
-      </div>
+
+<div id="adminArea" class="hidden">
+
+  <div class="admin-header">
+    <div>
+      <p id="adminIdentity"></p>
+      <h2>Painel administrativo</h2>
+      <p>Gerencie sua barbearia</p>
+    </div>
+    <button id="logout" class="btn secondary" type="button">Sair</button>
+  </div>
+
+  <nav class="admin-nav">
+    <button type="button" class="admin-tab active" data-tab="bookings">Agendamentos</button>
+    <button type="button" class="admin-tab" data-tab="services">Serviços e preços</button>
+    <button type="button" class="admin-tab" data-tab="hours">Horários</button>
+    <button type="button" class="admin-tab" data-tab="special">Datas especiais</button>
+    <button type="button" class="admin-tab" data-tab="settings">Configurações</button>
+    <button type="button" class="admin-tab" data-tab="history">Histórico</button>
+  </nav>
+
+  <section id="adminTabBookings" class="admin-panel">
+    <h3>Agendamentos</h3>
+    <button id="refreshBookings" class="btn" type="button">Atualizar agenda</button>
+    <div id="adminBookings" style="margin-top:14px"></div>
+  </section>
+
+  <section id="adminTabServices" class="admin-panel hidden">
+    <h3>Serviços e preços</h3>
+    <div id="adminServicesList"></div>
+  </section>
+
+  <section id="adminTabHours" class="admin-panel hidden">
+    <h3>Horários de funcionamento</h3>
+    <div id="adminHoursContent"></div>
+  </section>
+
+  <section id="adminTabSpecial" class="admin-panel hidden">
+    <h3>Datas especiais</h3>
+    <div id="adminSpecialContent"></div>
+  </section>
+
+  <section id="adminTabSettings" class="admin-panel hidden">
+    <h3>Configurações</h3>
+    <div id="adminSettingsContent"></div>
+  </section>
+
+  <section id="adminTabHistory" class="admin-panel hidden">
+    <h3>Histórico</h3>
+    <div id="adminHistoryContent"></div>
+  </section>
+
+</div>
+
     </details>
   </div></section>
 </main>
@@ -233,6 +376,30 @@
   }
   $("refreshBookings").addEventListener("click",loadAdmin);
   $("logout").addEventListener("click",async()=>{await client.auth.signOut();$("adminArea").classList.add("hidden")});
+
+  // NAVEGACAO DO PAINEL ADMINISTRATIVO
+  document.querySelectorAll(".admin-tab").forEach(button => {
+    button.addEventListener("click", () => {
+      const selected = button.dataset.tab;
+
+      document.querySelectorAll(".admin-tab").forEach(tab => {
+        tab.classList.remove("active");
+      });
+
+      button.classList.add("active");
+
+      document.querySelectorAll(".admin-panel").forEach(panel => {
+        panel.classList.add("hidden");
+      });
+
+      const panel = $("adminTab" + selected.charAt(0).toUpperCase() + selected.slice(1));
+
+      if (panel) {
+        panel.classList.remove("hidden");
+      }
+    });
+  });
+
   if(ready)loadServices();
 </script>
 </body>
