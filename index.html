@@ -816,7 +816,7 @@ $("refreshBookings").addEventListener("click",loadAdmin);
 
   // NAVEGACAO DO PAINEL ADMINISTRATIVO
   document.querySelectorAll(".admin-tab").forEach(button => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click",async () => {
       const selected = button.dataset.tab;
 
       document.querySelectorAll(".admin-tab").forEach(tab => {
@@ -834,7 +834,9 @@ $("refreshBookings").addEventListener("click",loadAdmin);
       if (panel) {
         panel.classList.remove("hidden");
       }
-    });
+ if (selected === "services") {
+  await loadAdminServices();
+}   });
   });
 // NOVO CÓDIGO DOS SERVIÇOS AQUI
 
