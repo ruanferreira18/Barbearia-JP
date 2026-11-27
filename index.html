@@ -628,6 +628,182 @@ async function loadAdminHours() {
   });
 }
 
+// GERENCIAMENTO DE DATAS ESPECIAIS
+async function loadAdminSpecial() {
+  const area = $("adminSpecialContent");
+  area.textContent = "Carregando datas especiais...";
+
+  const { data, error } = await client
+    .from("horarios_especiais")
+    .select("*")
+    .order("data", { ascending: true });
+
+  if (error) {
+    area.textContent = "Erro ao carregar datas: " + error.message;
+    return;
+  }
+
+  const datas = data || [];
+
+  area.innerHTML = `
+    <div class="card">
+      <h3>Cadastrar data especial</h3>
+
+      <form id="adminSpecialForm">
+        <label>Data</label>
+        <input id="specialDate" type="date" required>
+
+        <label>
+          <input id="specialClosed" type="checkbox">
+          Barbearia fechada neste dia
+        </label>
+
+        <label>Horário de abertura</label>
+        <input id="specialOpening" type="time">
+
+        <label>Início do intervalo</label>
+        <input id="specialBreakStart" type="time">
+
+        <label>Fim do intervalo</label>
+        <input id="specialBreakEnd" type="time">
+
+        <label>Horário de fechamento</label>
+        <input id="specialClosing" type="time">
+
+        <label>Observação</label>
+        <input id="specialObservation" type="text"
+          placeholder="Ex.: Feriado, compromisso, horário especial">
+
+        <button class="btn" type="submit">Salvar data especial</button>
+        <button class="btn secondary" type="button"
+          id="cancelSpecialEdit">Limpar formulário</button>
+      </form>
+
+      <p id="adminSpecialMessage"></p>
+    </div>
+
+    <h3>Datas cadastradas</h3>
+    <div id="adminSpecialItems"></div>
+  `;
+
+  const lista = $("adminSpecialItems");
+
+  lista.innerHTML = datas.map(item => `
+    <div class="card" style="margin:10px 0">
+      <strong>${esc(item.data)}</strong>
+      <p>${item.fechado ? "Barbearia fechada" : "Horário especial"}</p>
+      <p>Abertura: ${item.hora_abertura || "Não informado"}</p>
+      <p>Intervalo: ${item.inicio_intervalo || "--"} até ${item.fim_intervalo || "--"}</p>
+      <p>Fechamento: ${item.hora_fechamento || "Não informado"}</p>
+      <p>Observação: ${esc(item.observacao || "Nenhuma")}</p>
+
+      <button class="btn editSpecial" data-date="${item.data}"
+        type="button">Editar</button>
+
+      <button class="btn secondary deleteSpecial"
+        data-date="${item.data}" type="button">Excluir</button>
+    </div>
+  `).join("") || "Nenhuma data especial cadastrada.";
+
+  const form = $("adminSpecialForm");
+  const mensagem = $("adminSpecialMessage");
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const dia = $("specialDate").value;
+
+    const registro = {
+      data: dia,
+      fechado: $("specialClosed").checked,
+      hora_abertura: $("specialOpening").value || null,
+      inicio_intervalo: $("specialBreakStart").value || null,
+      fim_intervalo: $("specialBreakEnd").value || null,
+      hora_fechamento: $("specialClosing").value || null,
+      observacao: $("specialObservation").value.trim() || null
+    };
+
+    mensagem.textContent = "Salvando...";
+
+    const { data: existente, error: buscaErro } = await client
+      .from("horarios_especiais")
+      .select("data")
+      .eq("data", dia)
+      .maybeSingle();
+
+    if (buscaErro) {
+      mensagem.textContent = "Erro ao verificar data: " + buscaErro.message;
+      return;
+    }
+
+    let resultado;
+
+    if (existente) {
+      resultado = await client
+        .from("horarios_especiais")
+        .update(registro)
+        .eq("data", dia);
+    } else {
+      resultado = await client
+        .from("horarios_especiais")
+        .insert(registro);
+    }
+
+    if (resultado.error) {
+      mensagem.textContent = "Erro ao salvar: " + resultado.error.message;
+      return;
+    }
+
+    await loadAdminSpecial();
+    $("adminSpecialMessage").textContent = "Data salva com sucesso!";
+  });
+
+  $("cancelSpecialEdit").addEventListener("click", () => {
+    form.reset();
+  });
+
+  document.querySelectorAll(".editSpecial").forEach(button => {
+    button.addEventListener("click", () => {
+      const item = datas.find(d => d.data === button.dataset.date);
+      if (!item) return;
+
+      $("specialDate").value = item.data;
+      $("specialDate").disabled = true;
+      $("specialClosed").checked = item.fechado;
+      $("specialOpening").value = item.hora_abertura || "";
+      $("specialBreakStart").value = item.inicio_intervalo || "";
+      $("specialBreakEnd").value = item.fim_intervalo || "";
+      $("specialClosing").value = item.hora_fechamento || "";
+      $("specialObservation").value = item.observacao || "";
+
+      form.scrollIntoView({ behavior: "smooth" });
+    });
+  });
+
+  $("cancelSpecialEdit").addEventListener("click", () => {
+    form.reset();
+    $("specialDate").disabled = false;
+  });
+
+  document.querySelectorAll(".deleteSpecial").forEach(button => {
+    button.addEventListener("click", async () => {
+      if (!confirm("Deseja excluir esta data especial?")) return;
+
+      const { error } = await client
+        .from("horarios_especiais")
+        .delete()
+        .eq("data", button.dataset.date);
+
+      if (error) {
+        alert("Erro ao excluir: " + error.message);
+        return;
+      }
+
+      await loadAdminSpecial();
+    });
+  });
+}
+
 // ABRIR A LISTA AO ENTRAR NA ABA SERVICOS
 document.querySelectorAll('.admin-tab[data-tab="services"]').forEach(button => {
   button.addEventListener("click", loadAdminServices);
@@ -660,8 +836,9 @@ $("refreshBookings").addEventListener("click",loadAdmin);
       }
     });
   });
+// NOVO CÓDIGO DOS SERVIÇOS AQUI
 
-  if(ready)loadServices();
+if(ready)loadServices();
 </script>
 </body>
 </html>
